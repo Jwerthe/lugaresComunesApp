@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">supabase.co</domain>
+        <domain includeSubdomains="true">rjiczgicurzsckituhik.supabase.co</domain>
+    </domain-config>
+
+    <!-- Para desarrollo, permitir tráfico HTTP -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>

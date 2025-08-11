@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">Lugares Comunes</string>
+    <string name="search_hint">Buscar aulas, oficinas, laboratorios...</string>
+    <string name="available">Disponible</string>
+    <string name="occupied">Ocupado</string>
+    <string name="no_places_found">No se encontraron lugares</string>
+    <string name="try_different_search">Intenta con otro término de búsqueda</string>
+    <string name="added_to_favorites">Agregado a favoritos</string>
+    <string name="removed_from_favorites">Removido de favoritos</string>
+    <string name="copied_to_clipboard">Código copiado: %s</string>
+    <string name="navigating_to">Navegando a %s</string>
+    <string name="place_info">Información del lugar</string>
+    <string name="close">Cerrar</string>
+    <string name="navigate">Navegar</string>
+    <string name="profile">Perfil de usuario</string>
+    <string name="search">Buscar</string>
+    <string name="clear_search">Limpiar búsqueda</string>
+    <string name="add_to_favorites">Agregar a favoritos</string>
+    <string name="distance">Distancia</string>
+    <string name="what3words">what3words</string>
+    <string name="place_type">Tipo de lugar</string>
+    <string name="loading">Cargando...</string>
+</resources>

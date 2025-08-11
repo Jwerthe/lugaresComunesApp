@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:cardUseCompatPadding="true"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header de la card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Icono del tipo de lugar -->
+            <ImageView
+                android:id="@+id/placeTypeIcon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/circle_background_blue"
+                android:padding="8dp"
+                android:src="@drawable/ic_classroom"
+                android:contentDescription="Tipo de lugar"
+                android:scaleType="centerInside" />
+
+            <!-- Información principal -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:orientation="vertical">
+
+                <!-- Nombre del lugar -->
+                <TextView
+                    android:id="@+id/placeNameTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Aula A-101"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#2E3A59"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    tools:text="Aula A-101" />
+
+                <!-- Categoría -->
+                <TextView
+                    android:id="@+id/placeCategoryTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/category_tag_background"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:text="Aula"
+                    android:textSize="12sp"
+                    android:textColor="#4CAF50"
+                    android:fontFamily="sans-serif-medium"
+                    tools:text="Aula" />
+
+            </LinearLayout>
+
+            <!-- Botón de favoritos -->
+            <ImageView
+                android:id="@+id/favoriteIcon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_favorite_border"
+                android:contentDescription="Agregar a favoritos"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="4dp"
+                android:scaleType="centerInside" />
+
+        </LinearLayout>
+
+        <!-- Descripción -->
+        <TextView
+            android:id="@+id/placeDescriptionTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Aula de clases magistrales con capacidad para 40 estudiantes. Equipada con proyector y sistema de audio."
+            android:textSize="14sp"
+            android:textColor="#757575"
+            android:lineSpacingExtra="2dp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            tools:text="Aula de clases magistrales con capacidad para 40 estudiantes." />
+
+        <!-- Footer con información adicional -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Código what3words -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_what3words"
+                    android:contentDescription="what3words"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/what3wordsTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="música.ejemplo.libertad"
+                    android:textSize="12sp"
+                    android:textColor="#E91E63"
+                    android:fontFamily="monospace"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    tools:text="música.ejemplo.libertad" />
+
+            </LinearLayout>
+
+            <!-- Disponibilidad -->
+            <LinearLayout
+                android:id="@+id/availabilityContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginStart="16dp">
+
+                <View
+                    android:id="@+id/availabilityIndicator"
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/circle_background_green"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/availabilityTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Disponible"
+                    android:textSize="12sp"
+                    android:textColor="#4CAF50"
+                    android:fontFamily="sans-serif-medium"
+                    tools:text="Disponible" />
+
+            </LinearLayout>
+
+            <!-- Distancia -->
+            <LinearLayout
+                android:id="@+id/distanceContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginStart="16dp">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_distance"
+                    android:contentDescription="Distancia"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:id="@+id/distanceTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="120m"
+                    android:textSize="12sp"
+                    android:textColor="#757575"
+                    tools:text="120m" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
