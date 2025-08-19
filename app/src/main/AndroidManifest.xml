@@ -70,6 +70,13 @@
                 android:value=".UpdatedMainActivity" />
         </activity>
 
+        <!-- RoutesActivity - Nueva actividad para mostrar rutas -->
+        <activity
+            android:name=".RoutesActivity"
+            android:exported="false"
+            android:theme="@style/Theme.LugaresComunes"
+            android:parentActivityName=".UpdatedMainActivity" />
+
         <!-- Google Maps API Key -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"

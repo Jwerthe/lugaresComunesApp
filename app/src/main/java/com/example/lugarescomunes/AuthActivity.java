@@ -119,45 +119,53 @@ public class AuthActivity extends AppCompatActivity {
         togglePasswordVisibility.setOnClickListener(v -> togglePasswordVisibility());
         toggleRegisterPasswordVisibility.setOnClickListener(v -> toggleRegisterPasswordVisibility());
 
-        // Form buttons
+        // Action buttons
         loginButton.setOnClickListener(v -> performLogin());
         registerButton.setOnClickListener(v -> performRegister());
 
-        // Other actions
+        // ✅ AGREGADO: Click listener para continuar sin registrarse
         continueWithoutRegistrationTextView.setOnClickListener(v -> continueWithoutRegistration());
+
+        // Other actions
         forgotPasswordTextView.setOnClickListener(v -> showForgotPasswordDialog());
     }
 
     private void setupInitialState() {
+        // Mostrar login por defecto
         switchToLoginMode();
+
+        // ✅ MEJORADO: Hacer más visible el botón de continuar sin registrarse
+        continueWithoutRegistrationTextView.setVisibility(View.VISIBLE);
+        continueWithoutRegistrationTextView.setText("→ Continuar sin registrarse");
+        continueWithoutRegistrationTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_blue_light));
     }
 
     private void switchToLoginMode() {
         isLoginMode = true;
 
         // Update tab appearance
-        loginTabButton.setBackgroundResource(R.drawable.tab_selected_background);
-        loginTabButton.setTextColor(ContextCompat.getColor(this, android.R.color.black));
-        registerTabButton.setBackgroundResource(android.R.color.transparent);
-        registerTabButton.setTextColor(ContextCompat.getColor(this, R.color.gray_text));
+        loginTabButton.setSelected(true);
+        registerTabButton.setSelected(false);
 
         // Show/hide forms
         loginFormLayout.setVisibility(View.VISIBLE);
         registerFormLayout.setVisibility(View.GONE);
+
+        Log.d(TAG, "Cambiado a modo login");
     }
 
     private void switchToRegisterMode() {
         isLoginMode = false;
 
         // Update tab appearance
-        registerTabButton.setBackgroundResource(R.drawable.tab_selected_background);
-        registerTabButton.setTextColor(ContextCompat.getColor(this, android.R.color.black));
-        loginTabButton.setBackgroundResource(android.R.color.transparent);
-        loginTabButton.setTextColor(ContextCompat.getColor(this, R.color.gray_text));
+        loginTabButton.setSelected(false);
+        registerTabButton.setSelected(true);
 
         // Show/hide forms
         loginFormLayout.setVisibility(View.GONE);
         registerFormLayout.setVisibility(View.VISIBLE);
+
+        Log.d(TAG, "Cambiado a modo registro");
     }
 
     private void togglePasswordVisibility() {
@@ -229,16 +237,16 @@ public class AuthActivity extends AppCompatActivity {
 
                         if (result.isSuccess()) {
                             UserResponse user = result.getUser();
-                            String welcomeMessage = "¡Bienvenido" + (user != null ? " " + user.getFullName() : "") + "!";
+                            String welcomeMessage = "¡Bienvenido" + (user != null ? " " + user.getFullName() : "") + "! 🎉";
                             Toast.makeText(this, welcomeMessage, Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Login exitoso, navegando a UpdatedMainActivity");
                             navigateToMainActivity();
                         } else {
                             String errorMessage = result.getMessage();
                             if (errorMessage == null || errorMessage.isEmpty()) {
-                                errorMessage = "Error de autenticación";
+                                errorMessage = "Error en el login";
                             }
-                            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, "❌ " + errorMessage, Toast.LENGTH_LONG).show();
                             Log.w(TAG, "Login fallido: " + errorMessage);
                         }
                     });
@@ -247,7 +255,7 @@ public class AuthActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         setLoading(false);
                         Log.e(TAG, "Error inesperado en login", throwable);
-                        Toast.makeText(this, "Error inesperado. Intenta de nuevo.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "❌ Error de conexión. Verifica tu internet.", Toast.LENGTH_SHORT).show();
                     });
                     return null;
                 });
@@ -259,7 +267,7 @@ public class AuthActivity extends AppCompatActivity {
         String studentId = registerStudentIdEditText.getText().toString().trim();
         String password = registerPasswordEditText.getText().toString();
 
-        // Validación básica
+        // Validaciones básicas
         if (fullName.isEmpty()) {
             registerFullNameEditText.setError("Nombre completo es requerido");
             registerFullNameEditText.requestFocus();
@@ -278,17 +286,16 @@ public class AuthActivity extends AppCompatActivity {
             return;
         }
 
+        if (password.length() < 6) {
+            registerPasswordEditText.setError("Contraseña debe tener al menos 6 caracteres");
+            registerPasswordEditText.requestFocus();
+            return;
+        }
+
         // Validar formato de email
         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             registerEmailEditText.setError("Email inválido");
             registerEmailEditText.requestFocus();
-            return;
-        }
-
-        // Validar longitud de contraseña
-        if (password.length() < 6) {
-            registerPasswordEditText.setError("La contraseña debe tener al menos 6 caracteres");
-            registerPasswordEditText.requestFocus();
             return;
         }
 
@@ -298,7 +305,12 @@ public class AuthActivity extends AppCompatActivity {
         setLoading(true);
 
         // Realizar registro
-        authRepository.register(email, password, fullName, studentId.isEmpty() ? null : studentId)
+        authRepository.register(
+                email,
+                password,
+                fullName,
+                studentId.isEmpty() ? null : studentId
+        )
                 .thenAccept(result -> {
                     runOnUiThread(() -> {
                         setLoading(false);
@@ -307,7 +319,7 @@ public class AuthActivity extends AppCompatActivity {
 
                         if (result.isSuccess()) {
                             UserResponse user = result.getUser();
-                            String welcomeMessage = "¡Registro exitoso! Bienvenido" + (user != null ? " " + user.getFullName() : "") + "!";
+                            String welcomeMessage = "¡Registro exitoso! Bienvenido" + (user != null ? " " + user.getFullName() : "") + "! 🎉";
                             Toast.makeText(this, welcomeMessage, Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Registro exitoso, navegando a UpdatedMainActivity");
                             navigateToMainActivity();
@@ -316,7 +328,7 @@ public class AuthActivity extends AppCompatActivity {
                             if (errorMessage == null || errorMessage.isEmpty()) {
                                 errorMessage = "Error en el registro";
                             }
-                            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, "❌ " + errorMessage, Toast.LENGTH_LONG).show();
                             Log.w(TAG, "Registro fallido: " + errorMessage);
                         }
                     });
@@ -325,23 +337,48 @@ public class AuthActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         setLoading(false);
                         Log.e(TAG, "Error inesperado en registro", throwable);
-                        Toast.makeText(this, "Error inesperado en el registro. Intenta de nuevo.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "❌ Error de conexión. Intenta de nuevo.", Toast.LENGTH_SHORT).show();
                     });
                     return null;
                 });
     }
 
+    // ✅ MEJORADO: Función para continuar sin registrarse
     private void continueWithoutRegistration() {
-        // Navegar directamente a MainActivity sin autenticación
-        // El usuario funcionará como VISITOR
-        Toast.makeText(this, "Continuando como visitante", Toast.LENGTH_SHORT).show();
-        Log.i(TAG, "Usuario continúa como visitante, navegando a UpdatedMainActivity");
-        navigateToMainActivity();
+        Log.i(TAG, "Usuario eligió continuar sin registrarse");
+
+        // Mostrar diálogo de confirmación amigable
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("Continuar como visitante")
+                .setMessage("Podrás explorar lugares y rutas, pero no tendrás acceso a:\n\n" +
+                        "• Favoritos\n" +
+                        "• Historial de navegación\n" +
+                        "• Calificación de rutas\n" +
+                        "• Propuestas de rutas\n\n" +
+                        "¿Deseas continuar?")
+                .setPositiveButton("Sí, continuar", (dialog, which) -> {
+                    Toast.makeText(this, "👋 Continuando como visitante", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "Usuario confirmó continuar como visitante");
+                    navigateToMainActivity();
+                })
+                .setNegativeButton("Cancelar", null)
+                .setNeutralButton("Crear cuenta", (dialog, which) -> {
+                    switchToRegisterMode();
+                })
+                .show();
     }
 
     private void showForgotPasswordDialog() {
-        // Por ahora solo mostrar un mensaje
-        Toast.makeText(this, "Funcionalidad de recuperación de contraseña próximamente", Toast.LENGTH_LONG).show();
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("Recuperar contraseña")
+                .setMessage("La funcionalidad de recuperación de contraseña estará disponible próximamente.\n\n" +
+                        "Por ahora puedes:\n" +
+                        "• Crear una nueva cuenta\n" +
+                        "• Continuar como visitante")
+                .setPositiveButton("Crear cuenta", (dialog, which) -> switchToRegisterMode())
+                .setNeutralButton("Continuar como visitante", (dialog, which) -> continueWithoutRegistration())
+                .setNegativeButton("Cerrar", null)
+                .show();
     }
 
     private void setLoading(boolean loading) {
@@ -354,15 +391,14 @@ public class AuthActivity extends AppCompatActivity {
 
         // Cambiar texto del botón activo
         if (isLoginMode) {
-            loginButton.setText(loading ? "Iniciando sesión..." : "Login");
+            loginButton.setText(loading ? "Iniciando sesión..." : "Iniciar Sesión");
         } else {
-            registerButton.setText(loading ? "Registrando..." : "Register");
+            registerButton.setText(loading ? "Registrando..." : "Crear Cuenta");
         }
     }
 
     private void navigateToMainActivity() {
         Log.d(TAG, "Navegando a UpdatedMainActivity");
-        // ✅ CORRECCIÓN: Navegar a UpdatedMainActivity que está declarada en AndroidManifest.xml
         Intent intent = new Intent(this, UpdatedMainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);

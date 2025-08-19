@@ -67,8 +67,10 @@ public interface LugaresApiService {
 
     // ===== RUTAS (ENDPOINTS PÚBLICOS) =====
 
+    // ✅ CORREGIDO: Usar PlaceResponse en lugar de RouteDestinationResponse
+    // Según las imágenes que el usuario envió, este endpoint retorna lugares directamente
     @GET("routes/destinations")
-    Call<ApiResponse<List<RouteDestinationResponse>>> getRouteDestinations();
+    Call<ApiResponse<List<PlaceResponse>>> getRouteDestinations();
 
     @GET("routes/to/{placeId}")
     Call<ApiResponse<List<RouteResponse>>> getRoutesToPlace(@Path("placeId") String placeId);
@@ -129,7 +131,6 @@ public interface LugaresApiService {
 
     // ===== HEALTH CHECKS =====
 
-    // ✅ CORRECCIÓN: Usar endpoint que SÍ existe
     @GET("auth/health")
     Call<ApiResponse<Object>> generalHealth();
 }

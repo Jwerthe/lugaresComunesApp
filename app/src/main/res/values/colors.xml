@@ -25,4 +25,49 @@
     <!-- Colores existentes del proyecto -->
     <color name="light_gray">#FFF5F5F5</color>
     <color name="dark_gray">#FF757575</color>
+
+
+    <!-- Colores de fondo -->
+    <color name="backgroundColor">#F5F5F5</color>
+
+    <!-- Colores de texto -->
+    <color name="textPrimary">#212121</color>
+    <color name="textSecondary">#757575</color>
+    <color name="textHint">#BDBDBD</color>
+
+    <!-- Colores de estado -->
+    <color name="success">#4CAF50</color>
+    <color name="warning">#FF9800</color>
+    <color name="error">#F44336</color>
+    <color name="info">#2196F3</color>
+
+    <!-- Colores de disponibilidad -->
+    <color name="available">#4CAF50</color>
+    <color name="unavailable">#F44336</color>
+
+    <!-- Colores de rating -->
+    <color name="ratingColor">#FFD700</color>
+
+    <!-- Grises -->
+    <color name="mediumGray">#BDBDBD</color>
+    <color name="darkGray">#757575</color>
+
+    <!-- Colores transparentes -->
+    <color name="transparent">#00000000</color>
+    <color name="semiTransparent">#80000000</color>
+
+    <!-- Colores para categorías -->
+    <color name="category_classroom">#2196F3</color>
+    <color name="category_laboratory">#FF9800</color>
+    <color name="category_library">#9C27B0</color>
+    <color name="category_cafeteria">#4CAF50</color>
+    <color name="category_office">#F44336</color>
+    <color name="category_auditorium">#607D8B</color>
+    <color name="category_service">#2196F3</color>
+    <color name="category_other">#757575</color>
+
+    <!-- Colores para dificultad -->
+    <color name="difficulty_easy">#4CAF50</color>
+    <color name="difficulty_medium">#FF9800</color>
+    <color name="difficulty_hard">#F44336</color>
 </resources>

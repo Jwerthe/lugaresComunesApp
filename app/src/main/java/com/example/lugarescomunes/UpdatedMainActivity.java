@@ -23,7 +23,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.lugarescomunes.repository.PlacesRepository; // ✅ USAR EL REPOSITORIO CORRECTO
+import com.example.lugarescomunes.repository.PlacesRepository;
 import com.example.lugarescomunes.repository.AuthRepository;
 import com.example.lugarescomunes.models.api.UserResponse;
 
@@ -59,7 +59,7 @@ public class UpdatedMainActivity extends AppCompatActivity {
     private List<Place> filteredPlacesList;
 
     // Repositorios
-    private PlacesRepository placesRepository; // ✅ USAR EL REPOSITORIO CORRECTO
+    private PlacesRepository placesRepository;
     private AuthRepository authRepository;
 
     // Estado del usuario
@@ -81,7 +81,7 @@ public class UpdatedMainActivity extends AppCompatActivity {
         });
 
         // Inicializar repositorios
-        placesRepository = PlacesRepository.getInstance(); // ✅ USAR EL REPOSITORIO CORRECTO
+        placesRepository = PlacesRepository.getInstance();
         authRepository = AuthRepository.getInstance(this);
 
         // Verificar estado de autenticación
@@ -136,8 +136,6 @@ public class UpdatedMainActivity extends AppCompatActivity {
         placesRecyclerView = findViewById(R.id.placesRecyclerView);
         emptyStateContainer = findViewById(R.id.emptyStateContainer);
         loadingProgressBar = findViewById(R.id.loadingProgressBar);
-
-        // User welcome text (agregar al layout si no existe)
         userWelcomeTextView = findViewById(R.id.userWelcomeTextView);
 
         Log.d(TAG, "Views inicializadas correctamente");
@@ -153,13 +151,16 @@ public class UpdatedMainActivity extends AppCompatActivity {
         placesAdapter = new PlacesAdapter(filteredPlacesList, this);
         placesRecyclerView.setAdapter(placesAdapter);
 
-        // Configurar listener para clicks en las cards
+        // ✅ NUEVA IMPLEMENTACIÓN: Configurar listener para navegar a RoutesActivity
         placesAdapter.setOnPlaceClickListener(new PlacesAdapter.OnPlaceClickListener() {
             @Override
             public void onPlaceClick(Place place) {
-                Log.d(TAG, "Click en lugar: " + place.getName());
-                // Navegar a detalles del lugar
-                Intent intent = PlaceDetailActivity.createIntent(UpdatedMainActivity.this, place);
+                Log.d(TAG, "Click en lugar: " + place.getName() + " (ID: " + place.getId() + ")");
+
+                // 🎯 NAVEGAR A ROUTES ACTIVITY EN LUGAR DE PLACE DETAIL
+                Intent intent = new Intent(UpdatedMainActivity.this, RoutesActivity.class);
+                intent.putExtra(RoutesActivity.EXTRA_DESTINATION_ID, place.getId());
+                intent.putExtra(RoutesActivity.EXTRA_DESTINATION_NAME, place.getName());
                 startActivity(intent);
             }
 
@@ -170,9 +171,12 @@ public class UpdatedMainActivity extends AppCompatActivity {
 
             @Override
             public void onNavigateClick(Place place) {
-                Log.d(TAG, "Navegación a lugar: " + place.getName());
-                // Navegar directamente al lugar
-                Intent intent = PlaceDetailActivity.createIntent(UpdatedMainActivity.this, place);
+                Log.d(TAG, "Navegación directa a lugar: " + place.getName());
+
+                // También navegar a rutas para navegación directa
+                Intent intent = new Intent(UpdatedMainActivity.this, RoutesActivity.class);
+                intent.putExtra(RoutesActivity.EXTRA_DESTINATION_ID, place.getId());
+                intent.putExtra(RoutesActivity.EXTRA_DESTINATION_NAME, place.getName());
                 startActivity(intent);
             }
         });
@@ -180,11 +184,29 @@ public class UpdatedMainActivity extends AppCompatActivity {
         Log.d(TAG, "RecyclerView configurado correctamente");
     }
 
+    private void handleFavoriteClick(Place place) {
+        place.setFavorite(!place.isFavorite());
+
+        String message = place.isFavorite() ?
+                "📍 " + place.getName() + " agregado a favoritos" :
+                "💔 " + place.getName() + " removido de favoritos";
+
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+
+        // Actualizar adapter para reflejar el cambio
+        placesAdapter.notifyDataSetChanged();
+
+        // TODO: Aquí se podría guardar en el servidor si el usuario está logueado
+        if (isLoggedIn) {
+            Log.d(TAG, "TODO: Guardar favorito en servidor para usuario: " + currentUser.getEmail());
+        }
+    }
+
     private void setupClickListeners() {
         // Click en icono de búsqueda
         searchIconImageView.setOnClickListener(v -> toggleSearchBar());
 
-        // Click en icono de mapa - ✅ CORRECCIÓN: Manejo seguro
+        // Click en icono de mapa
         mapIconImageView.setOnClickListener(v -> {
             try {
                 Log.d(TAG, "Abriendo MapsActivity");
@@ -219,14 +241,12 @@ public class UpdatedMainActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 // Mostrar/ocultar botón de limpiar
                 clearSearchImageView.setVisibility(s.length() > 0 ? View.VISIBLE : View.GONE);
-
-                // Filtrar lugares en tiempo real
-                filterPlaces(s.toString());
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-                // No necesitamos implementar esto
+                String query = s.toString().trim();
+                filterPlaces(query);
             }
         });
 
@@ -234,68 +254,133 @@ public class UpdatedMainActivity extends AppCompatActivity {
     }
 
     private void showSplashScreen() {
+        // Mostrar splash
         splashContainer.setVisibility(View.VISIBLE);
         mainContentContainer.setVisibility(View.GONE);
 
-        Log.d(TAG, "Mostrando splash screen");
-
-        // Después del splash, mostrar contenido principal
+        // Después del tiempo del splash, mostrar contenido principal
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            showMainContent();
+            splashContainer.setVisibility(View.GONE);
+            mainContentContainer.setVisibility(View.VISIBLE);
+
+            // Cargar datos después de mostrar el contenido
+            loadPlacesWithHealthCheck();
         }, SPLASH_DURATION);
-    }
 
-    private void showMainContent() {
-        Log.d(TAG, "Mostrando contenido principal");
-
-        splashContainer.setVisibility(View.GONE);
-        mainContentContainer.setVisibility(View.VISIBLE);
-
-        updateUserInterface();
-        loadPlacesData();
+        Log.d(TAG, "Splash screen mostrado por " + SPLASH_DURATION + "ms");
     }
 
     private void updateUserInterface() {
-        if (isLoggedIn && currentUser != null) {
-            // Mostrar información del usuario
-            if (userWelcomeTextView != null) {
-                String welcome = "Hola, " + currentUser.getFullName();
-                userWelcomeTextView.setText(welcome);
+        if (userWelcomeTextView != null) {
+            if (currentUser != null) {
+                String welcomeText = "¡Hola, " + currentUser.getFullName() + "! 👋";
+                userWelcomeTextView.setText(welcomeText);
                 userWelcomeTextView.setVisibility(View.VISIBLE);
-                Log.d(TAG, "UI actualizada para usuario: " + currentUser.getFullName());
-            }
-
-            // Cambiar icono de perfil para mostrar que está logueado
-            profileIconImageView.setImageResource(R.drawable.ic_account_circle_filled);
-        } else {
-            // Usuario visitante
-            if (userWelcomeTextView != null) {
-                userWelcomeTextView.setText("Modo Visitante");
+            } else if (isLoggedIn) {
+                // Usuario logueado pero sin datos detallados
+                userWelcomeTextView.setText("¡Bienvenido! 👋");
+                userWelcomeTextView.setVisibility(View.VISIBLE);
+            } else {
+                // Usuario visitante
+                userWelcomeTextView.setText("👋 Modo visitante - Explora lugares y rutas");
                 userWelcomeTextView.setVisibility(View.VISIBLE);
             }
-
-            profileIconImageView.setImageResource(R.drawable.ic_account_circle);
-            Log.d(TAG, "UI actualizada para modo visitante");
         }
     }
 
-    private void loadPlacesData() {
-        Log.d(TAG, "Iniciando carga de lugares");
+    private void handleProfileClick() {
+        if (isLoggedIn) {
+            Log.d(TAG, "Usuario logueado, mostrar opciones de perfil");
+
+            // Crear diálogo con opciones
+            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+            builder.setTitle("Perfil de " + currentUser.getFullName())
+                    .setMessage("¿Qué deseas hacer?")
+                    .setPositiveButton("Ver Perfil", (dialog, which) -> {
+                        Toast.makeText(this, "Perfil de " + currentUser.getFullName(), Toast.LENGTH_SHORT).show();
+                        // TODO: Navegar a ProfileActivity cuando esté implementada
+                    })
+                    .setNegativeButton("Cerrar Sesión", (dialog, which) -> {
+                        handleLogout();
+                    })
+                    .setNeutralButton("Cancelar", null)
+                    .show();
+        } else {
+            Log.d(TAG, "Usuario no logueado, mostrar login");
+            Intent intent = new Intent(this, AuthActivity.class);
+            startActivity(intent);
+        }
+    }
+
+    private void handleLogout() {
+        Log.d(TAG, "Cerrando sesión del usuario");
+
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("Cerrar Sesión")
+                .setMessage("¿Estás seguro que deseas cerrar sesión?")
+                .setPositiveButton("Sí, cerrar sesión", (dialog, which) -> {
+                    // Limpiar datos de autenticación
+                    authRepository.logout();
+
+                    // Actualizar estado local
+                    isLoggedIn = false;
+                    currentUser = null;
+
+                    // Actualizar UI
+                    updateUserInterface();
+
+                    // Mostrar mensaje de confirmación
+                    Toast.makeText(this, "👋 Sesión cerrada exitosamente", Toast.LENGTH_SHORT).show();
+
+                    Log.i(TAG, "Sesión cerrada exitosamente");
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void toggleSearchBar() {
+        boolean isVisible = searchBarContainer.getVisibility() == View.VISIBLE;
+
+        if (!isVisible) {
+            searchBarContainer.setVisibility(View.VISIBLE);
+            searchEditText.requestFocus();
+
+            // Mostrar teclado
+            android.view.inputmethod.InputMethodManager imm =
+                    (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            imm.showSoftInput(searchEditText,
+                    android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+        } else {
+            searchBarContainer.setVisibility(View.GONE);
+            searchEditText.setText("");
+
+            // Ocultar teclado
+            android.view.inputmethod.InputMethodManager imm =
+                    (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
+        }
+    }
+
+    private void loadPlacesWithHealthCheck() {
         showLoading(true);
 
-        // Verificar conectividad primero
-        placesRepository.checkHealth()
-                .thenAccept(isHealthy -> {
-                    Log.d(TAG, "Health check resultado: " + isHealthy);
-                    if (isHealthy) {
-                        // Cargar datos del backend
-                        loadPlacesFromBackend();
+        Log.d(TAG, "Iniciando health check de API");
+
+        // Verificar salud de la API primero
+        placesRepository.checkApiHealth()
+                .thenAccept(healthy -> {
+                    if (healthy) {
+                        Log.i(TAG, "API disponible, cargando destinos");
+                        runOnUiThread(() -> {
+                            loadPlacesFromBackend();
+                        });
                     } else {
                         runOnUiThread(() -> {
+                            Log.w(TAG, "API no disponible");
                             showLoading(false);
-                            Toast.makeText(this, "Conectividad limitada. Mostrando datos locales.", Toast.LENGTH_LONG).show();
-                            // Cargar datos de muestra en lugar de mostrar error
-                            loadPlacesFromBackend(); // El repository manejará el fallback automáticamente
+                            Toast.makeText(this, "⚠️ Servicio temporalmente no disponible. " +
+                                    "Verifica tu conexión a internet.", Toast.LENGTH_LONG).show();
+                            showEmptyState();
                         });
                     }
                 })
@@ -303,21 +388,22 @@ public class UpdatedMainActivity extends AppCompatActivity {
                     Log.e(TAG, "Error en health check", throwable);
                     runOnUiThread(() -> {
                         showLoading(false);
-                        loadPlacesFromBackend(); // Intentar cargar de todas formas
+                        Toast.makeText(this, "❌ Error de conexión. Verifica tu internet.", Toast.LENGTH_LONG).show();
+                        showEmptyState();
                     });
                     return null;
                 });
     }
 
     private void loadPlacesFromBackend() {
-        Log.d(TAG, "Cargando lugares desde backend/cache");
+        Log.d(TAG, "Cargando destinos desde /routes/destinations");
 
         placesRepository.getAllPlaces()
                 .thenAccept(places -> {
                     runOnUiThread(() -> {
                         showLoading(false);
 
-                        Log.d(TAG, "Lugares recibidos: " + (places != null ? places.size() : 0));
+                        Log.d(TAG, "Destinos recibidos: " + (places != null ? places.size() : 0));
 
                         if (places != null && !places.isEmpty()) {
                             placesList.clear();
@@ -329,10 +415,10 @@ public class UpdatedMainActivity extends AppCompatActivity {
                             placesAdapter.notifyDataSetChanged();
                             showContentWithData();
 
-                            Log.i(TAG, "Lugares cargados exitosamente: " + places.size());
-                            Toast.makeText(this, "Lugares cargados: " + places.size(), Toast.LENGTH_SHORT).show();
+                            Log.i(TAG, "Destinos cargados exitosamente: " + places.size());
+                            Toast.makeText(this, "🎯 " + places.size() + " destinos disponibles", Toast.LENGTH_SHORT).show();
                         } else {
-                            Log.w(TAG, "No se encontraron lugares");
+                            Log.w(TAG, "No se encontraron destinos");
                             showEmptyState();
                         }
                     });
@@ -340,8 +426,14 @@ public class UpdatedMainActivity extends AppCompatActivity {
                 .exceptionally(throwable -> {
                     runOnUiThread(() -> {
                         showLoading(false);
-                        Log.e(TAG, "Error cargando lugares", throwable);
-                        Toast.makeText(this, "Error cargando lugares", Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Error cargando destinos", throwable);
+
+                        String errorMessage = "Error cargando destinos";
+                        if (throwable.getMessage() != null) {
+                            errorMessage += ": " + throwable.getMessage();
+                        }
+
+                        Toast.makeText(this, "❌ " + errorMessage, Toast.LENGTH_LONG).show();
                         showEmptyState();
                     });
                     return null;
@@ -349,35 +441,80 @@ public class UpdatedMainActivity extends AppCompatActivity {
     }
 
     private void filterPlaces(String query) {
-        Log.d(TAG, "Filtrando lugares con query: '" + query + "'");
+        Log.d(TAG, "Filtrando destinos con query: '" + query + "'");
 
         if (query.trim().isEmpty()) {
             // Mostrar todos los lugares
             filteredPlacesList.clear();
             filteredPlacesList.addAll(placesList);
-            Log.d(TAG, "Mostrando todos los lugares: " + filteredPlacesList.size());
+            Log.d(TAG, "Mostrando todos los destinos: " + filteredPlacesList.size());
         } else {
-            // Filtrar localmente primero para respuesta inmediata
-            filteredPlacesList.clear();
-            String queryLower = query.toLowerCase();
+            // Usar repositorio para búsqueda
+            placesRepository.searchPlaces(query)
+                    .thenAccept(searchResults -> {
+                        runOnUiThread(() -> {
+                            filteredPlacesList.clear();
+                            filteredPlacesList.addAll(searchResults);
+                            placesAdapter.notifyDataSetChanged();
 
-            for (Place place : placesList) {
-                if (place.getName().toLowerCase().contains(queryLower) ||
-                        place.getCategory().toLowerCase().contains(queryLower) ||
-                        (place.getDescription() != null && place.getDescription().toLowerCase().contains(queryLower))) {
-                    filteredPlacesList.add(place);
-                }
-            }
+                            Log.d(TAG, "Resultados de búsqueda: " + searchResults.size());
 
-            Log.d(TAG, "Filtro local encontró: " + filteredPlacesList.size() + " lugares");
-
-            // También buscar en el servidor para resultados más completos
-            searchInBackend(query);
+                            if (searchResults.isEmpty()) {
+                                Toast.makeText(this, "No se encontraron destinos para '" + query + "'", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    })
+                    .exceptionally(throwable -> {
+                        runOnUiThread(() -> {
+                            Log.e(TAG, "Error en búsqueda", throwable);
+                            Toast.makeText(this, "Error en búsqueda", Toast.LENGTH_SHORT).show();
+                        });
+                        return null;
+                    });
+            return;
         }
 
         placesAdapter.notifyDataSetChanged();
+        updateContentVisibility();
+    }
 
-        // Mostrar/ocultar empty state
+    private void showLoading(boolean show) {
+        if (loadingProgressBar != null) {
+            loadingProgressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
+        if (placesRecyclerView != null) {
+            placesRecyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
+        }
+        if (emptyStateContainer != null) {
+            emptyStateContainer.setVisibility(View.GONE);
+        }
+    }
+
+    private void showContentWithData() {
+        if (placesRecyclerView != null) {
+            placesRecyclerView.setVisibility(View.VISIBLE);
+        }
+        if (emptyStateContainer != null) {
+            emptyStateContainer.setVisibility(View.GONE);
+        }
+        if (loadingProgressBar != null) {
+            loadingProgressBar.setVisibility(View.GONE);
+        }
+    }
+
+    private void showEmptyState() {
+        if (emptyStateContainer != null) {
+            emptyStateContainer.setVisibility(View.VISIBLE);
+        }
+        if (placesRecyclerView != null) {
+            placesRecyclerView.setVisibility(View.GONE);
+        }
+        if (loadingProgressBar != null) {
+            loadingProgressBar.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateContentVisibility() {
         if (filteredPlacesList.isEmpty()) {
             showEmptyState();
         } else {
@@ -385,150 +522,28 @@ public class UpdatedMainActivity extends AppCompatActivity {
         }
     }
 
-    private void searchInBackend(String query) {
-        Log.d(TAG, "Buscando en backend: " + query);
-
-        placesRepository.searchPlaces(query)
-                .thenAccept(searchResults -> {
-                    runOnUiThread(() -> {
-                        if (searchResults != null && !searchResults.isEmpty()) {
-                            Log.d(TAG, "Búsqueda en backend encontró: " + searchResults.size() + " lugares");
-
-                            // Combinar resultados locales y del servidor (evitar duplicados)
-                            for (Place place : searchResults) {
-                                boolean exists = false;
-                                for (Place existing : filteredPlacesList) {
-                                    if (existing.getId().equals(place.getId())) {
-                                        exists = true;
-                                        break;
-                                    }
-                                }
-                                if (!exists) {
-                                    filteredPlacesList.add(place);
-                                }
-                            }
-                            placesAdapter.notifyDataSetChanged();
-
-                            if (!filteredPlacesList.isEmpty()) {
-                                showContentWithData();
-                            }
-                        } else {
-                            Log.d(TAG, "Búsqueda en backend no encontró resultados");
-                        }
-                    });
-                })
-                .exceptionally(throwable -> {
-                    Log.w(TAG, "Error en búsqueda del servidor", throwable);
-                    // Error en búsqueda del servidor, pero no afecta la búsqueda local
-                    return null;
-                });
-    }
-
-    private void handleFavoriteClick(Place place) {
-        if (!isLoggedIn) {
-            Toast.makeText(this, "Inicia sesión para agregar favoritos", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Toggle favorito
-        place.setFavorite(!place.isFavorite());
-        placesAdapter.notifyDataSetChanged();
-
-        String message = place.isFavorite() ? "Agregado a favoritos" : "Removido de favoritos";
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-        Log.d(TAG, message + ": " + place.getName());
-
-        // TODO: Implementar llamada al backend para guardar/quitar favorito
-        // favoritesRepository.toggleFavorite(place.getId());
-    }
-
-    private void handleProfileClick() {
-        if (isLoggedIn) {
-            // Mostrar opciones de usuario logueado
-            showUserProfileOptions();
-        } else {
-            // Ir a AuthActivity
-            Intent intent = new Intent(this, AuthActivity.class);
-            startActivity(intent);
-        }
-    }
-
-    private void showUserProfileOptions() {
-        // Por ahora solo mostrar opción de logout
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Perfil de Usuario")
-                .setMessage("Usuario: " + (currentUser != null ? currentUser.getFullName() : "Desconocido") +
-                        "\nTipo: " + (currentUser != null ? currentUser.getUserType() : "Desconocido"))
-                .setPositiveButton("Cerrar Sesión", (dialog, which) -> logout())
-                .setNegativeButton("Cancelar", null)
-                .show();
-    }
-
-    private void logout() {
-        authRepository.logout();
-        isLoggedIn = false;
-        currentUser = null;
-        updateUserInterface();
-        Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Usuario deslogueado");
-    }
-
-    private void toggleSearchBar() {
-        if (searchBarContainer.getVisibility() == View.VISIBLE) {
-            // Ocultar barra de búsqueda
-            searchBarContainer.setVisibility(View.GONE);
-            searchEditText.setText("");
-            searchEditText.clearFocus();
-            Log.d(TAG, "Barra de búsqueda ocultada");
-        } else {
-            // Mostrar barra de búsqueda
-            searchBarContainer.setVisibility(View.VISIBLE);
-            searchEditText.requestFocus();
-            Log.d(TAG, "Barra de búsqueda mostrada");
-
-            // Mostrar teclado
-            searchEditText.postDelayed(() -> {
-                android.view.inputmethod.InputMethodManager imm =
-                        (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-                if (imm != null) {
-                    imm.showSoftInput(searchEditText, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
-                }
-            }, 100);
-        }
-    }
-
-    private void showLoading(boolean show) {
-        loadingProgressBar.setVisibility(show ? View.VISIBLE : View.GONE);
-        placesRecyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
-        emptyStateContainer.setVisibility(View.GONE);
-        Log.d(TAG, "Loading state: " + show);
-    }
-
-    private void showContentWithData() {
-        loadingProgressBar.setVisibility(View.GONE);
-        emptyStateContainer.setVisibility(View.GONE);
-        placesRecyclerView.setVisibility(View.VISIBLE);
-        Log.d(TAG, "Mostrando contenido con datos");
-    }
-
-    private void showEmptyState() {
-        loadingProgressBar.setVisibility(View.GONE);
-        placesRecyclerView.setVisibility(View.GONE);
-        emptyStateContainer.setVisibility(View.VISIBLE);
-        Log.d(TAG, "Mostrando estado vacío");
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume - Verificando estado de autenticación");
+        Log.d(TAG, "UpdatedMainActivity resumed");
+
         // Verificar si el estado de autenticación cambió
-        checkAuthenticationStatus();
+        boolean currentLoginState = authRepository.isLoggedIn();
+        if (currentLoginState != isLoggedIn) {
+            isLoggedIn = currentLoginState;
+            checkAuthenticationStatus();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "UpdatedMainActivity paused");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "UpdatedMainActivity destruida");
+        Log.d(TAG, "UpdatedMainActivity destroyed");
     }
 }
