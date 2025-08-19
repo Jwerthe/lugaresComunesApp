@@ -1,9 +1,7 @@
 <resources>
     <string name="app_name">Lugares Comunes</string>
     <string name="search_hint">Buscar aulas, oficinas, laboratorios...</string>
-    <string name="available">Disponible</string>
     <string name="occupied">Ocupado</string>
-    <string name="no_places_found">No se encontraron lugares</string>
     <string name="try_different_search">Intenta con otro término de búsqueda</string>
     <string name="added_to_favorites">Agregado a favoritos</string>
     <string name="removed_from_favorites">Removido de favoritos</string>
@@ -11,7 +9,6 @@
     <string name="navigating_to">Navegando a %s</string>
     <string name="place_info">Información del lugar</string>
     <string name="close">Cerrar</string>
-    <string name="navigate">Navegar</string>
     <string name="profile">Perfil de usuario</string>
     <string name="search">Buscar</string>
     <string name="clear_search">Limpiar búsqueda</string>
@@ -20,4 +17,67 @@
     <string name="what3words">what3words</string>
     <string name="place_type">Tipo de lugar</string>
     <string name="loading">Cargando...</string>
+
+    <string name="login_title">Go ahead and set up\nyour account</string>
+    <string name="login_subtitle">Sign in-up to enjoy the best managing experience</string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="email_address">Email Address</string>
+    <string name="password">Password</string>
+    <string name="full_name">Full Name</string>
+    <string name="student_id_optional">Student ID (Optional)</string>
+    <string name="remember_me">Remember me</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="or_login_with">Or login with</string>
+    <string name="google">Google</string>
+    <string name="facebook">Facebook</string>
+    <string name="continue_without_registration">Continue without registration</string>
+
+    <!-- Mensajes de validación -->
+    <string name="email_required">Email is required</string>
+    <string name="password_required">Password is required</string>
+    <string name="full_name_required">Full name is required</string>
+    <string name="invalid_email">Invalid email</string>
+    <string name="password_min_length">Password must be at least 6 characters</string>
+
+    <!-- Mensajes de estado -->
+    <string name="login_success">Welcome!</string>
+    <string name="register_success">Registration successful! Welcome</string>
+    <string name="continue_as_visitor">Continuing as visitor</string>
+    <string name="logging_in">Logging in...</string>
+    <string name="registering">Registering...</string>
+
+    <!-- Otros strings existentes -->
+    <string name="places_title">Lugares Comunes</string>
+    <string name="search_places">Buscar lugares...</string>
+    <string name="no_places_found">No se encontraron lugares</string>
+    <string name="empty_state_title">No hay lugares disponibles</string>
+    <string name="empty_state_message">Actualmente no hay lugares disponibles para mostrar.</string>
+
+    <!-- Tipos de lugares -->
+    <string name="classroom">Aula</string>
+    <string name="laboratory">Laboratorio</string>
+    <string name="library">Biblioteca</string>
+    <string name="cafeteria">Cafetería</string>
+    <string name="office">Oficina</string>
+    <string name="auditorium">Auditorio</string>
+    <string name="service">Servicio</string>
+
+    <!-- Navegación -->
+    <string name="navigate">Navegar</string>
+    <string name="share">Compartir</string>
+    <string name="report">Reportar</string>
+    <string name="favorite">Favorito</string>
+    <string name="available">Disponible</string>
+    <string name="not_available">No disponible</string>
+
+    <!-- Distancias -->
+    <string name="meters_away">%d m</string>
+    <string name="kilometers_away">%.1f km</string>
+
+    <!-- Permisos -->
+    <string name="location_permission_needed">Se necesita permiso de ubicación</string>
+    <string name="location_permission_denied">Permiso de ubicación denegado</string>
+
+    <string name="google_maps_key">AIzaSyCKXPXaE6dDh2yt28A0ZLQkofvfPTcNxRU</string>
 </resources>

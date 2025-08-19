@@ -10,8 +10,8 @@ android {
         applicationId = "com.example.lugarescomunes"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -24,6 +24,11 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            isDebuggable = true
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
     }
 
     compileOptions {
@@ -33,11 +38,18 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
+    }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
     }
 }
 
 dependencies {
-    // Dependencias existentes
+    // Core Android libraries
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -47,57 +59,59 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.cardview:cardview:1.0.0")
 
-    // Coordinator Layout para pantalla de detalles
-    implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
-
-    // Lifecycle components
-    implementation("androidx.lifecycle:lifecycle-viewmodel:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-livedata:2.7.0")
-
-    // Navigation Component
-    implementation("androidx.navigation:navigation-fragment:2.7.5")
-    implementation("androidx.navigation:navigation-ui:2.7.5")
-
-    // Location Services
-    implementation("com.google.android.gms:play-services-location:21.0.1")
-    implementation("com.google.android.gms:play-services-maps:18.2.0")
-
-    // Network libraries para Supabase
+    // Networking - Retrofit y OkHttp
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-    // JSON parsing
+    // JSON parsing - Gson
     implementation("com.google.code.gson:gson:2.10.1")
 
-    // Permission handling
-    implementation("pub.devrel:easypermissions:3.0.0")
-
-    // Shimmer effect for loading
-    implementation("com.facebook.shimmer:shimmer:0.5.0")
-
-    // Lottie animations (optional)
-    implementation("com.airbnb.android:lottie:6.1.0")
-
+    // Google Maps y Location Services
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.gms:play-services-location:21.0.1")
-    // Para futuras integraciones cuando estén listas:
-    // Supabase SDK
-    // implementation("io.github.jan-tennert.supabase:postgrest-kt:2.0.4")
-    // implementation("io.github.jan-tennert.supabase:gotrue-kt:2.0.4")
-    // implementation("io.ktor:ktor-client-android:2.3.7")
 
-    // what3words SDK
-    // implementation("com.what3words:w3w-android-wrapper:3.1.22")
+    // Lifecycle y ViewModels (para manejo de estados)
+    implementation("androidx.lifecycle:lifecycle-viewmodel:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-livedata:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-common-java8:2.7.0")
 
-    // Supabase SDK (cuando lo necesitemos)
-    // implementation("io.supabase:postgrest-kt:1.4.7")
-    // implementation("io.supabase:storage-kt:1.4.7")
-    // implementation("io.supabase:gotrue-kt:1.4.7")
+    // Fragment y Navigation (para futuras funcionalidades)
+    implementation("androidx.fragment:fragment:1.6.2")
+    implementation("androidx.navigation:navigation-fragment:2.7.6")
+    implementation("androidx.navigation:navigation-ui:2.7.6")
+
+    // SwipeRefreshLayout
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+
+    // Permisos fáciles
+    implementation("pub.devrel:easypermissions:3.0.0")
+
+    // Shimmer effect para loading
+    implementation("com.facebook.shimmer:shimmer:0.5.0")
+
+    // Lottie animations (opcional para animaciones)
+    implementation("com.airbnb.android:lottie:6.1.0")
+
+    // Glide para carga de imágenes (para futuras funcionalidades)
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+
+    // Preferences DataStore (alternativa moderna a SharedPreferences)
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // Work Manager (para tareas en background)
+    implementation("androidx.work:work-runtime:2.9.0")
 
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+    // Testing adicional
+    testImplementation("org.mockito:mockito-core:5.7.0")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
 }
