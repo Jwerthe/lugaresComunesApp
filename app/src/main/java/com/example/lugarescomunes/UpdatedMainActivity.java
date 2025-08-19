@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -22,7 +23,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.lugarescomunes.repository.NewPlacesRepository;
+import com.example.lugarescomunes.repository.PlacesRepository; // ✅ USAR EL REPOSITORIO CORRECTO
 import com.example.lugarescomunes.repository.AuthRepository;
 import com.example.lugarescomunes.models.api.UserResponse;
 
@@ -32,7 +33,7 @@ import java.util.List;
 public class UpdatedMainActivity extends AppCompatActivity {
 
     private static final String TAG = "UpdatedMainActivity";
-    private static final int SPLASH_DURATION = 2000; // 2 segundos
+    private static final int SPLASH_DURATION = 1500; // 1.5 segundos
 
     // Views del Splash Screen
     private LinearLayout splashContainer;
@@ -58,7 +59,7 @@ public class UpdatedMainActivity extends AppCompatActivity {
     private List<Place> filteredPlacesList;
 
     // Repositorios
-    private NewPlacesRepository placesRepository;
+    private PlacesRepository placesRepository; // ✅ USAR EL REPOSITORIO CORRECTO
     private AuthRepository authRepository;
 
     // Estado del usuario
@@ -71,6 +72,8 @@ public class UpdatedMainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
+        Log.d(TAG, "=== UPDATED MAIN ACTIVITY INICIADA ===");
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -78,7 +81,7 @@ public class UpdatedMainActivity extends AppCompatActivity {
         });
 
         // Inicializar repositorios
-        placesRepository = NewPlacesRepository.getInstance();
+        placesRepository = PlacesRepository.getInstance(); // ✅ USAR EL REPOSITORIO CORRECTO
         authRepository = AuthRepository.getInstance(this);
 
         // Verificar estado de autenticación
@@ -95,8 +98,11 @@ public class UpdatedMainActivity extends AppCompatActivity {
 
     private void checkAuthenticationStatus() {
         isLoggedIn = authRepository.isLoggedIn();
+        Log.d(TAG, "Usuario logueado: " + isLoggedIn);
+
         if (isLoggedIn) {
             currentUser = authRepository.getCurrentUserSync();
+            Log.d(TAG, "Usuario actual: " + (currentUser != null ? currentUser.getFullName() : "null"));
 
             // Opcional: Actualizar datos del usuario desde el servidor
             authRepository.getCurrentUser()
@@ -105,6 +111,10 @@ public class UpdatedMainActivity extends AppCompatActivity {
                             currentUser = user;
                             runOnUiThread(this::updateUserInterface);
                         }
+                    })
+                    .exceptionally(throwable -> {
+                        Log.w(TAG, "Error actualizando datos de usuario", throwable);
+                        return null;
                     });
         }
     }
@@ -127,8 +137,10 @@ public class UpdatedMainActivity extends AppCompatActivity {
         emptyStateContainer = findViewById(R.id.emptyStateContainer);
         loadingProgressBar = findViewById(R.id.loadingProgressBar);
 
-        // Crear TextView para saludo de usuario (agregar al layout si no existe)
+        // User welcome text (agregar al layout si no existe)
         userWelcomeTextView = findViewById(R.id.userWelcomeTextView);
+
+        Log.d(TAG, "Views inicializadas correctamente");
     }
 
     private void setupRecyclerView() {
@@ -145,6 +157,7 @@ public class UpdatedMainActivity extends AppCompatActivity {
         placesAdapter.setOnPlaceClickListener(new PlacesAdapter.OnPlaceClickListener() {
             @Override
             public void onPlaceClick(Place place) {
+                Log.d(TAG, "Click en lugar: " + place.getName());
                 // Navegar a detalles del lugar
                 Intent intent = PlaceDetailActivity.createIntent(UpdatedMainActivity.this, place);
                 startActivity(intent);
@@ -157,21 +170,30 @@ public class UpdatedMainActivity extends AppCompatActivity {
 
             @Override
             public void onNavigateClick(Place place) {
+                Log.d(TAG, "Navegación a lugar: " + place.getName());
                 // Navegar directamente al lugar
                 Intent intent = PlaceDetailActivity.createIntent(UpdatedMainActivity.this, place);
                 startActivity(intent);
             }
         });
+
+        Log.d(TAG, "RecyclerView configurado correctamente");
     }
 
     private void setupClickListeners() {
         // Click en icono de búsqueda
         searchIconImageView.setOnClickListener(v -> toggleSearchBar());
 
-        // Click en icono de mapa
+        // Click en icono de mapa - ✅ CORRECCIÓN: Manejo seguro
         mapIconImageView.setOnClickListener(v -> {
-            Intent intent = new Intent(UpdatedMainActivity.this, MapsActivity.class);
-            startActivity(intent);
+            try {
+                Log.d(TAG, "Abriendo MapsActivity");
+                Intent intent = new Intent(UpdatedMainActivity.this, MapsActivity.class);
+                startActivity(intent);
+            } catch (Exception e) {
+                Log.e(TAG, "Error abriendo MapsActivity", e);
+                Toast.makeText(this, "Error abriendo el mapa", Toast.LENGTH_SHORT).show();
+            }
         });
 
         // Click en icono de perfil
@@ -182,6 +204,8 @@ public class UpdatedMainActivity extends AppCompatActivity {
             searchEditText.setText("");
             clearSearchImageView.setVisibility(View.GONE);
         });
+
+        Log.d(TAG, "Click listeners configurados");
     }
 
     private void setupSearchFunctionality() {
@@ -205,37 +229,25 @@ public class UpdatedMainActivity extends AppCompatActivity {
                 // No necesitamos implementar esto
             }
         });
+
+        Log.d(TAG, "Funcionalidad de búsqueda configurada");
     }
 
     private void showSplashScreen() {
         splashContainer.setVisibility(View.VISIBLE);
         mainContentContainer.setVisibility(View.GONE);
 
-        // Después del splash, decidir qué mostrar
+        Log.d(TAG, "Mostrando splash screen");
+
+        // Después del splash, mostrar contenido principal
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            // Si no está logueado y es la primera vez, mostrar AuthActivity
-            if (!isLoggedIn && isFirstTime()) {
-                showAuthActivity();
-            } else {
-                // Continuar con la app normal
-                showMainContent();
-            }
+            showMainContent();
         }, SPLASH_DURATION);
     }
 
-    private boolean isFirstTime() {
-        // Puedes implementar lógica para detectar si es la primera vez
-        // Por ahora, siempre mostrar AuthActivity si no está logueado
-        return true;
-    }
-
-    private void showAuthActivity() {
-        Intent intent = new Intent(this, AuthActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
     private void showMainContent() {
+        Log.d(TAG, "Mostrando contenido principal");
+
         splashContainer.setVisibility(View.GONE);
         mainContentContainer.setVisibility(View.VISIBLE);
 
@@ -250,6 +262,7 @@ public class UpdatedMainActivity extends AppCompatActivity {
                 String welcome = "Hola, " + currentUser.getFullName();
                 userWelcomeTextView.setText(welcome);
                 userWelcomeTextView.setVisibility(View.VISIBLE);
+                Log.d(TAG, "UI actualizada para usuario: " + currentUser.getFullName());
             }
 
             // Cambiar icono de perfil para mostrar que está logueado
@@ -262,41 +275,49 @@ public class UpdatedMainActivity extends AppCompatActivity {
             }
 
             profileIconImageView.setImageResource(R.drawable.ic_account_circle);
+            Log.d(TAG, "UI actualizada para modo visitante");
         }
     }
 
     private void loadPlacesData() {
+        Log.d(TAG, "Iniciando carga de lugares");
         showLoading(true);
 
         // Verificar conectividad primero
         placesRepository.checkHealth()
                 .thenAccept(isHealthy -> {
+                    Log.d(TAG, "Health check resultado: " + isHealthy);
                     if (isHealthy) {
                         // Cargar datos del backend
                         loadPlacesFromBackend();
                     } else {
                         runOnUiThread(() -> {
                             showLoading(false);
-                            Toast.makeText(this, "No se puede conectar al servidor. Verifique su conexión.", Toast.LENGTH_LONG).show();
-                            showEmptyState();
+                            Toast.makeText(this, "Conectividad limitada. Mostrando datos locales.", Toast.LENGTH_LONG).show();
+                            // Cargar datos de muestra en lugar de mostrar error
+                            loadPlacesFromBackend(); // El repository manejará el fallback automáticamente
                         });
                     }
                 })
                 .exceptionally(throwable -> {
+                    Log.e(TAG, "Error en health check", throwable);
                     runOnUiThread(() -> {
                         showLoading(false);
-                        Toast.makeText(this, "Error verificando conexión", Toast.LENGTH_SHORT).show();
-                        showEmptyState();
+                        loadPlacesFromBackend(); // Intentar cargar de todas formas
                     });
                     return null;
                 });
     }
 
     private void loadPlacesFromBackend() {
+        Log.d(TAG, "Cargando lugares desde backend/cache");
+
         placesRepository.getAllPlaces()
                 .thenAccept(places -> {
                     runOnUiThread(() -> {
                         showLoading(false);
+
+                        Log.d(TAG, "Lugares recibidos: " + (places != null ? places.size() : 0));
 
                         if (places != null && !places.isEmpty()) {
                             placesList.clear();
@@ -308,8 +329,10 @@ public class UpdatedMainActivity extends AppCompatActivity {
                             placesAdapter.notifyDataSetChanged();
                             showContentWithData();
 
+                            Log.i(TAG, "Lugares cargados exitosamente: " + places.size());
                             Toast.makeText(this, "Lugares cargados: " + places.size(), Toast.LENGTH_SHORT).show();
                         } else {
+                            Log.w(TAG, "No se encontraron lugares");
                             showEmptyState();
                         }
                     });
@@ -317,6 +340,7 @@ public class UpdatedMainActivity extends AppCompatActivity {
                 .exceptionally(throwable -> {
                     runOnUiThread(() -> {
                         showLoading(false);
+                        Log.e(TAG, "Error cargando lugares", throwable);
                         Toast.makeText(this, "Error cargando lugares", Toast.LENGTH_SHORT).show();
                         showEmptyState();
                     });
@@ -325,10 +349,13 @@ public class UpdatedMainActivity extends AppCompatActivity {
     }
 
     private void filterPlaces(String query) {
+        Log.d(TAG, "Filtrando lugares con query: '" + query + "'");
+
         if (query.trim().isEmpty()) {
             // Mostrar todos los lugares
             filteredPlacesList.clear();
             filteredPlacesList.addAll(placesList);
+            Log.d(TAG, "Mostrando todos los lugares: " + filteredPlacesList.size());
         } else {
             // Filtrar localmente primero para respuesta inmediata
             filteredPlacesList.clear();
@@ -342,7 +369,9 @@ public class UpdatedMainActivity extends AppCompatActivity {
                 }
             }
 
-            // Opcional: También buscar en el servidor
+            Log.d(TAG, "Filtro local encontró: " + filteredPlacesList.size() + " lugares");
+
+            // También buscar en el servidor para resultados más completos
             searchInBackend(query);
         }
 
@@ -357,10 +386,14 @@ public class UpdatedMainActivity extends AppCompatActivity {
     }
 
     private void searchInBackend(String query) {
+        Log.d(TAG, "Buscando en backend: " + query);
+
         placesRepository.searchPlaces(query)
                 .thenAccept(searchResults -> {
                     runOnUiThread(() -> {
                         if (searchResults != null && !searchResults.isEmpty()) {
+                            Log.d(TAG, "Búsqueda en backend encontró: " + searchResults.size() + " lugares");
+
                             // Combinar resultados locales y del servidor (evitar duplicados)
                             for (Place place : searchResults) {
                                 boolean exists = false;
@@ -375,10 +408,17 @@ public class UpdatedMainActivity extends AppCompatActivity {
                                 }
                             }
                             placesAdapter.notifyDataSetChanged();
+
+                            if (!filteredPlacesList.isEmpty()) {
+                                showContentWithData();
+                            }
+                        } else {
+                            Log.d(TAG, "Búsqueda en backend no encontró resultados");
                         }
                     });
                 })
                 .exceptionally(throwable -> {
+                    Log.w(TAG, "Error en búsqueda del servidor", throwable);
                     // Error en búsqueda del servidor, pero no afecta la búsqueda local
                     return null;
                 });
@@ -396,6 +436,7 @@ public class UpdatedMainActivity extends AppCompatActivity {
 
         String message = place.isFavorite() ? "Agregado a favoritos" : "Removido de favoritos";
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        Log.d(TAG, message + ": " + place.getName());
 
         // TODO: Implementar llamada al backend para guardar/quitar favorito
         // favoritesRepository.toggleFavorite(place.getId());
@@ -429,6 +470,7 @@ public class UpdatedMainActivity extends AppCompatActivity {
         currentUser = null;
         updateUserInterface();
         Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Usuario deslogueado");
     }
 
     private void toggleSearchBar() {
@@ -437,10 +479,12 @@ public class UpdatedMainActivity extends AppCompatActivity {
             searchBarContainer.setVisibility(View.GONE);
             searchEditText.setText("");
             searchEditText.clearFocus();
+            Log.d(TAG, "Barra de búsqueda ocultada");
         } else {
             // Mostrar barra de búsqueda
             searchBarContainer.setVisibility(View.VISIBLE);
             searchEditText.requestFocus();
+            Log.d(TAG, "Barra de búsqueda mostrada");
 
             // Mostrar teclado
             searchEditText.postDelayed(() -> {
@@ -457,24 +501,34 @@ public class UpdatedMainActivity extends AppCompatActivity {
         loadingProgressBar.setVisibility(show ? View.VISIBLE : View.GONE);
         placesRecyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
         emptyStateContainer.setVisibility(View.GONE);
+        Log.d(TAG, "Loading state: " + show);
     }
 
     private void showContentWithData() {
         loadingProgressBar.setVisibility(View.GONE);
         emptyStateContainer.setVisibility(View.GONE);
         placesRecyclerView.setVisibility(View.VISIBLE);
+        Log.d(TAG, "Mostrando contenido con datos");
     }
 
     private void showEmptyState() {
         loadingProgressBar.setVisibility(View.GONE);
         placesRecyclerView.setVisibility(View.GONE);
         emptyStateContainer.setVisibility(View.VISIBLE);
+        Log.d(TAG, "Mostrando estado vacío");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d(TAG, "onResume - Verificando estado de autenticación");
         // Verificar si el estado de autenticación cambió
         checkAuthenticationStatus();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "UpdatedMainActivity destruida");
     }
 }

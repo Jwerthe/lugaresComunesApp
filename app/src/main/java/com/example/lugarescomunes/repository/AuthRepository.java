@@ -120,28 +120,71 @@ public class AuthRepository {
         call.enqueue(new Callback<ApiResponse<AuthResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<AuthResponse>> call, Response<ApiResponse<AuthResponse>> response) {
+                Log.d(TAG, "Respuesta de login - Código: " + response.code());
+
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<AuthResponse> apiResponse = response.body();
+                    Log.d(TAG, "Success: " + apiResponse.isSuccess());
+                    Log.d(TAG, "Message: " + apiResponse.getMessage());
+
                     if (apiResponse.isSuccess() && apiResponse.getData() != null) {
                         AuthResponse authResponse = apiResponse.getData();
-                        saveUserSession(authResponse.getToken(), authResponse.getUser());
 
-                        Log.i(TAG, "Login exitoso para: " + email);
-                        future.complete(new AuthResult(true, "Login exitoso", authResponse.getUser()));
+                        if (authResponse.getToken() != null && authResponse.getUser() != null) {
+                            saveUserSession(authResponse.getToken(), authResponse.getUser());
+
+                            Log.i(TAG, "Login exitoso para: " + email);
+                            future.complete(new AuthResult(true, "Login exitoso", authResponse.getUser()));
+                        } else {
+                            Log.w(TAG, "Token o usuario nulo en la respuesta");
+                            future.complete(new AuthResult(false, "Respuesta inválida del servidor", null));
+                        }
                     } else {
-                        Log.w(TAG, "Login fallido: " + apiResponse.getMessage());
-                        future.complete(new AuthResult(false, apiResponse.getMessage(), null));
+                        String errorMessage = apiResponse.getMessage() != null ?
+                                apiResponse.getMessage() : "Error desconocido";
+                        Log.w(TAG, "Login fallido: " + errorMessage);
+                        future.complete(new AuthResult(false, errorMessage, null));
                     }
                 } else {
-                    Log.w(TAG, "Error en respuesta de login: " + response.code());
-                    future.complete(new AuthResult(false, "Error en el servidor", null));
+                    Log.w(TAG, "Error en respuesta de login - Código: " + response.code());
+
+                    // Intentar leer el error del cuerpo de la respuesta
+                    String errorMessage = "Error en el servidor";
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            Log.e(TAG, "Error body: " + errorBody);
+                            // Aquí podrías parsear el JSON de error si es necesario
+                            if (errorBody.contains("INTERNAL_SERVER_ERROR")) {
+                                errorMessage = "Error interno del servidor. Intenta de nuevo más tarde.";
+                            } else if (response.code() == 401) {
+                                errorMessage = "Credenciales incorrectas";
+                            } else if (response.code() == 400) {
+                                errorMessage = "Datos de login inválidos";
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error leyendo error response", e);
+                    }
+
+                    future.complete(new AuthResult(false, errorMessage, null));
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<AuthResponse>> call, Throwable t) {
                 Log.e(TAG, "Error en login", t);
-                future.complete(new AuthResult(false, "Error de conexión", null));
+                String errorMessage = "Error de conexión";
+
+                if (t.getMessage() != null) {
+                    if (t.getMessage().contains("timeout")) {
+                        errorMessage = "Tiempo de espera agotado. Verifica tu conexión.";
+                    } else if (t.getMessage().contains("Unable to resolve host")) {
+                        errorMessage = "No se puede conectar al servidor. Verifica tu conexión.";
+                    }
+                }
+
+                future.complete(new AuthResult(false, errorMessage, null));
             }
         });
 
@@ -177,28 +220,68 @@ public class AuthRepository {
         call.enqueue(new Callback<ApiResponse<AuthResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<AuthResponse>> call, Response<ApiResponse<AuthResponse>> response) {
+                Log.d(TAG, "Respuesta de registro - Código: " + response.code());
+
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<AuthResponse> apiResponse = response.body();
+                    Log.d(TAG, "Success: " + apiResponse.isSuccess());
+                    Log.d(TAG, "Message: " + apiResponse.getMessage());
+
                     if (apiResponse.isSuccess() && apiResponse.getData() != null) {
                         AuthResponse authResponse = apiResponse.getData();
-                        saveUserSession(authResponse.getToken(), authResponse.getUser());
 
-                        Log.i(TAG, "Registro exitoso para: " + email);
-                        future.complete(new AuthResult(true, "Registro exitoso", authResponse.getUser()));
+                        if (authResponse.getToken() != null && authResponse.getUser() != null) {
+                            saveUserSession(authResponse.getToken(), authResponse.getUser());
+
+                            Log.i(TAG, "Registro exitoso para: " + email);
+                            future.complete(new AuthResult(true, "Registro exitoso", authResponse.getUser()));
+                        } else {
+                            Log.w(TAG, "Token o usuario nulo en la respuesta de registro");
+                            future.complete(new AuthResult(false, "Respuesta inválida del servidor", null));
+                        }
                     } else {
-                        Log.w(TAG, "Registro fallido: " + apiResponse.getMessage());
-                        future.complete(new AuthResult(false, apiResponse.getMessage(), null));
+                        String errorMessage = apiResponse.getMessage() != null ?
+                                apiResponse.getMessage() : "Error desconocido en el registro";
+                        Log.w(TAG, "Registro fallido: " + errorMessage);
+                        future.complete(new AuthResult(false, errorMessage, null));
                     }
                 } else {
-                    Log.w(TAG, "Error en respuesta de registro: " + response.code());
-                    future.complete(new AuthResult(false, "Error en el servidor", null));
+                    Log.w(TAG, "Error en respuesta de registro - Código: " + response.code());
+
+                    String errorMessage = "Error en el servidor";
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            Log.e(TAG, "Error body: " + errorBody);
+
+                            if (response.code() == 400) {
+                                errorMessage = "El email ya está registrado o los datos son inválidos";
+                            } else if (response.code() == 409) {
+                                errorMessage = "El email ya está en uso";
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error leyendo error response", e);
+                    }
+
+                    future.complete(new AuthResult(false, errorMessage, null));
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<AuthResponse>> call, Throwable t) {
                 Log.e(TAG, "Error en registro", t);
-                future.complete(new AuthResult(false, "Error de conexión", null));
+                String errorMessage = "Error de conexión en el registro";
+
+                if (t.getMessage() != null) {
+                    if (t.getMessage().contains("timeout")) {
+                        errorMessage = "Tiempo de espera agotado. Verifica tu conexión.";
+                    } else if (t.getMessage().contains("Unable to resolve host")) {
+                        errorMessage = "No se puede conectar al servidor. Verifica tu conexión.";
+                    }
+                }
+
+                future.complete(new AuthResult(false, errorMessage, null));
             }
         });
 
@@ -255,6 +338,7 @@ public class AuthRepository {
                     future.complete(user);
                 } else {
                     // Token posiblemente expirado
+                    Log.w(TAG, "Token expirado o inválido, limpiando sesión");
                     clearUserSession();
                     future.complete(null);
                 }

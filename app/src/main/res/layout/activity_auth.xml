@@ -49,7 +49,7 @@
                 android:text="Go ahead and set up\nyour account"
                 android:textSize="28sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/white"
+                android:textColor="@android:color/black"
                 android:gravity="start"
                 android:layout_marginBottom="8dp" />
 
@@ -60,7 +60,7 @@
                 android:layout_height="wrap_content"
                 android:text="Sign in-up to enjoy the best managing experience"
                 android:textSize="14sp"
-                android:textColor="#B3FFFFFF"
+                android:textColor="#666666"
                 android:gravity="start"
                 android:layout_marginBottom="32dp" />
 
@@ -139,7 +139,7 @@
                             android:id="@+id/loginEmailEditText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="micahmad@potarastudio.com"
+                            android:hint="ejemplo@email.com"
                             android:textSize="16sp"
                             android:textColor="@android:color/black"
                             android:textColorHint="#C7C7CC"
@@ -185,7 +185,7 @@
                             android:id="@+id/loginPasswordEditText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="mic4hmad#"
+                            android:hint="Tu contraseña"
                             android:textSize="16sp"
                             android:textColor="@android:color/black"
                             android:textColorHint="#C7C7CC"
@@ -247,8 +247,7 @@
                     android:textColor="@android:color/white"
                     android:textStyle="bold"
                     android:textSize="16sp"
-                    android:background="@drawable/button_primary_background"
-                    android:layout_marginBottom="24dp" />
+                    android:background="@drawable/button_primary_background" />
 
             </LinearLayout>
 
@@ -461,55 +460,7 @@
                     android:textColor="@android:color/white"
                     android:textStyle="bold"
                     android:textSize="16sp"
-                    android:background="@drawable/button_primary_background"
-                    android:layout_marginBottom="24dp" />
-
-            </LinearLayout>
-
-            <!-- Or login with -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Or login with"
-                android:textSize="14sp"
-                android:textColor="#8E8E93"
-                android:gravity="center"
-                android:layout_marginBottom="20dp" />
-
-            <!-- Social Login Buttons -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center">
-
-                <Button
-                    android:id="@+id/googleLoginButton"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:text="Google"
-                    android:textColor="@android:color/black"
-                    android:textSize="14sp"
-                    android:background="@drawable/button_google_background"
-                    android:drawableStart="@drawable/ic_google"
-                    android:drawablePadding="8dp"
-                    android:gravity="center"
-                    android:layout_marginEnd="8dp" />
-
-                <Button
-                    android:id="@+id/facebookLoginButton"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:text="Facebook"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp"
-                    android:background="@drawable/button_facebook_background"
-                    android:drawableStart="@drawable/ic_facebook"
-                    android:drawablePadding="8dp"
-                    android:gravity="center"
-                    android:layout_marginStart="8dp" />
+                    android:background="@drawable/button_primary_background" />
 
             </LinearLayout>
 

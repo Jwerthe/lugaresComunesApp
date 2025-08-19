@@ -3,6 +3,7 @@ package com.example.lugarescomunes;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -51,10 +52,6 @@ public class AuthActivity extends AppCompatActivity {
     private ImageView toggleRegisterPasswordVisibility;
     private Button registerButton;
 
-    // Social login views
-    private Button googleLoginButton;
-    private Button facebookLoginButton;
-
     // State
     private boolean isLoginMode = true;
     private boolean isPasswordVisible = false;
@@ -66,11 +63,14 @@ public class AuthActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
 
+        Log.d(TAG, "=== AUTH ACTIVITY INICIADA ===");
+
         // Inicializar repositorio de autenticación
         authRepository = AuthRepository.getInstance(this);
 
         // Verificar si ya está logueado
         if (authRepository.isLoggedIn()) {
+            Log.d(TAG, "Usuario ya logueado, navegando a MainActivity");
             navigateToMainActivity();
             return;
         }
@@ -108,10 +108,6 @@ public class AuthActivity extends AppCompatActivity {
         registerPasswordEditText = findViewById(R.id.registerPasswordEditText);
         toggleRegisterPasswordVisibility = findViewById(R.id.toggleRegisterPasswordVisibility);
         registerButton = findViewById(R.id.registerButton);
-
-        // Social login views
-        googleLoginButton = findViewById(R.id.googleLoginButton);
-        facebookLoginButton = findViewById(R.id.facebookLoginButton);
     }
 
     private void setupClickListeners() {
@@ -130,10 +126,6 @@ public class AuthActivity extends AppCompatActivity {
         // Other actions
         continueWithoutRegistrationTextView.setOnClickListener(v -> continueWithoutRegistration());
         forgotPasswordTextView.setOnClickListener(v -> showForgotPasswordDialog());
-
-        // Social login (por ahora solo mostrar toast)
-        googleLoginButton.setOnClickListener(v -> showSocialLoginNotImplemented("Google"));
-        facebookLoginButton.setOnClickListener(v -> showSocialLoginNotImplemented("Facebook"));
     }
 
     private void setupInitialState() {
@@ -222,6 +214,8 @@ public class AuthActivity extends AppCompatActivity {
             return;
         }
 
+        Log.d(TAG, "Iniciando login para: " + email);
+
         // Mostrar loading
         setLoading(true);
 
@@ -231,18 +225,29 @@ public class AuthActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         setLoading(false);
 
+                        Log.d(TAG, "Resultado de login - Success: " + result.isSuccess() + ", Message: " + result.getMessage());
+
                         if (result.isSuccess()) {
-                            Toast.makeText(this, "¡Bienvenido!", Toast.LENGTH_SHORT).show();
+                            UserResponse user = result.getUser();
+                            String welcomeMessage = "¡Bienvenido" + (user != null ? " " + user.getFullName() : "") + "!";
+                            Toast.makeText(this, welcomeMessage, Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "Login exitoso, navegando a UpdatedMainActivity");
                             navigateToMainActivity();
                         } else {
-                            Toast.makeText(this, result.getMessage(), Toast.LENGTH_LONG).show();
+                            String errorMessage = result.getMessage();
+                            if (errorMessage == null || errorMessage.isEmpty()) {
+                                errorMessage = "Error de autenticación";
+                            }
+                            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+                            Log.w(TAG, "Login fallido: " + errorMessage);
                         }
                     });
                 })
                 .exceptionally(throwable -> {
                     runOnUiThread(() -> {
                         setLoading(false);
-                        Toast.makeText(this, "Error inesperado", Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Error inesperado en login", throwable);
+                        Toast.makeText(this, "Error inesperado. Intenta de nuevo.", Toast.LENGTH_SHORT).show();
                     });
                     return null;
                 });
@@ -287,6 +292,8 @@ public class AuthActivity extends AppCompatActivity {
             return;
         }
 
+        Log.d(TAG, "Iniciando registro para: " + email);
+
         // Mostrar loading
         setLoading(true);
 
@@ -296,18 +303,29 @@ public class AuthActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         setLoading(false);
 
+                        Log.d(TAG, "Resultado de registro - Success: " + result.isSuccess() + ", Message: " + result.getMessage());
+
                         if (result.isSuccess()) {
-                            Toast.makeText(this, "¡Registro exitoso! Bienvenido", Toast.LENGTH_SHORT).show();
+                            UserResponse user = result.getUser();
+                            String welcomeMessage = "¡Registro exitoso! Bienvenido" + (user != null ? " " + user.getFullName() : "") + "!";
+                            Toast.makeText(this, welcomeMessage, Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "Registro exitoso, navegando a UpdatedMainActivity");
                             navigateToMainActivity();
                         } else {
-                            Toast.makeText(this, result.getMessage(), Toast.LENGTH_LONG).show();
+                            String errorMessage = result.getMessage();
+                            if (errorMessage == null || errorMessage.isEmpty()) {
+                                errorMessage = "Error en el registro";
+                            }
+                            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+                            Log.w(TAG, "Registro fallido: " + errorMessage);
                         }
                     });
                 })
                 .exceptionally(throwable -> {
                     runOnUiThread(() -> {
                         setLoading(false);
-                        Toast.makeText(this, "Error inesperado en el registro", Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Error inesperado en registro", throwable);
+                        Toast.makeText(this, "Error inesperado en el registro. Intenta de nuevo.", Toast.LENGTH_SHORT).show();
                     });
                     return null;
                 });
@@ -317,6 +335,7 @@ public class AuthActivity extends AppCompatActivity {
         // Navegar directamente a MainActivity sin autenticación
         // El usuario funcionará como VISITOR
         Toast.makeText(this, "Continuando como visitante", Toast.LENGTH_SHORT).show();
+        Log.i(TAG, "Usuario continúa como visitante, navegando a UpdatedMainActivity");
         navigateToMainActivity();
     }
 
@@ -325,18 +344,12 @@ public class AuthActivity extends AppCompatActivity {
         Toast.makeText(this, "Funcionalidad de recuperación de contraseña próximamente", Toast.LENGTH_LONG).show();
     }
 
-    private void showSocialLoginNotImplemented(String provider) {
-        Toast.makeText(this, "Login con " + provider + " próximamente", Toast.LENGTH_SHORT).show();
-    }
-
     private void setLoading(boolean loading) {
         loadingProgressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
 
         // Deshabilitar botones mientras carga
         loginButton.setEnabled(!loading);
         registerButton.setEnabled(!loading);
-        googleLoginButton.setEnabled(!loading);
-        facebookLoginButton.setEnabled(!loading);
         continueWithoutRegistrationTextView.setEnabled(!loading);
 
         // Cambiar texto del botón activo
@@ -348,7 +361,9 @@ public class AuthActivity extends AppCompatActivity {
     }
 
     private void navigateToMainActivity() {
-        Intent intent = new Intent(this, MainActivity.class);
+        Log.d(TAG, "Navegando a UpdatedMainActivity");
+        // ✅ CORRECCIÓN: Navegar a UpdatedMainActivity que está declarada en AndroidManifest.xml
+        Intent intent = new Intent(this, UpdatedMainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();

@@ -129,6 +129,7 @@ public interface LugaresApiService {
 
     // ===== HEALTH CHECKS =====
 
-    @GET("health")
+    // ✅ CORRECCIÓN: Usar endpoint que SÍ existe
+    @GET("auth/health")
     Call<ApiResponse<Object>> generalHealth();
 }
